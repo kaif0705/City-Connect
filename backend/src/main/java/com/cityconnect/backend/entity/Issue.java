@@ -2,6 +2,7 @@ package com.cityconnect.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -38,5 +39,8 @@ public class Issue {
     @CreationTimestamp
     private Instant createdAt;
 
-    // We will add the @ManyToOne relationship to the User entity in Slice 4
+    @ManyToOne(fetch = FetchType.LAZY) // LAZY = don't fetch the User unless we ask for it
+    @JoinColumn(name = "user_id", nullable = false) // Defines the foreign key column
+    @ToString.Exclude // 2. Add this to prevent infinite loops in logging
+    private User user;
 }
