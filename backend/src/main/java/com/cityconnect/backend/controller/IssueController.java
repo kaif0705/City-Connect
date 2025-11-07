@@ -72,4 +72,15 @@ public class IssueController {
         // Return 204 No Content, which is the standard for a successful DELETE
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    /**
+    Retrieves all issues submitted by the currently authenticated user.
+     * The security for this path is already configured in SecurityConfig
+     * under "/api/v1/issues/**".
+     */
+    @GetMapping("/issues/my")
+    public ResponseEntity<List<IssueResponse>> getIssuesForCurrentUser() {
+        List<IssueResponse> issues = issueService.getIssuesForCurrentUser();
+        return new ResponseEntity<>(issues, HttpStatus.OK);
+    }
 }

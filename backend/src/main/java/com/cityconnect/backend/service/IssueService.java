@@ -11,5 +11,6 @@ public interface IssueService {
     List<IssueResponse> getAllIssues();
     IssueResponse updateIssueStatus(Long id, String newStatus);
     void deleteIssue(Long id);
+    List<IssueResponse> getIssuesForCurrentUser();
 
 }

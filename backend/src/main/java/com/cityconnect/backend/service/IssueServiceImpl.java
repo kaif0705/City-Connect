@@ -80,6 +80,22 @@ public class IssueServiceImpl implements IssueService {
         issueRepository.deleteById(id);
     }
 
+    //Get Issues for current user
+    @Override
+    @Transactional(readOnly = true)
+    public List<IssueResponse> getIssuesForCurrentUser() {
+        // 1. Get the currently authenticated user principal from the security context
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        // 2. Call our new repository method
+        List<Issue> issues = issueRepository.findByUserOrderByCreatedAtDesc(currentUser);
+
+        // 3. Map the list of entities to a list of response DTOs
+        return issues.stream()
+                .map(this::mapToResponse) // Use our existing helper
+                .collect(Collectors.toList());
+    }
+
 
     // --- Private Helper Methods for Mapping ---
 

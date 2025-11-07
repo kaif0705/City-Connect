@@ -64,3 +64,14 @@ export const deleteIssue = async (id) => {
     throw error.response.data || error;
   }
 };
+
+/**
+ *  Get User Issues (for Citizen) ---
+ * Calls the GET /api/v1/issues/my endpoint.
+ * @returns {Promise<Array>} - An array of the user's own issue objects.
+ */
+export const getMyIssues = async () => {
+  // The auth token is automatically added by the interceptor in api.js
+  const response = await api.get('/issues/my');
+  return response.data;
+};
