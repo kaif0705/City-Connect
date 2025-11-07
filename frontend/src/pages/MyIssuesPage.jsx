@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Link as RouterLink } from "react-router-dom"; // 1. Import RouterLink
 import { getMyIssues } from "../services/issueService";
-import { useNotification } from "../context/NotificationContext"; // We'll import this just in case
-
-// Import MUI components
+import { useNotification } from "../context/NotificationContext";
 import {
   Typography,
   Container,
@@ -12,20 +11,20 @@ import {
   CircularProgress,
   Alert,
   Chip,
-  CardMedia, // 1. NEW IMPORT for images
+  Link, // 2. Import MUI Link
+  CardMedia,
 } from "@mui/material";
 
-// 2. DEFINE OUR BACKEND URL FOR MEDIA
+// We need this to build the full image URL
 const BACKEND_URL = "http://localhost:8080";
 
 function MyIssuesPage() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { showNotification } = useNotification(); // Get the hook
+  const { showNotification } = useNotification();
 
   useEffect(() => {
-    // Fetch issues when the component mounts
     const fetchIssues = async () => {
       try {
         setLoading(true);
@@ -34,14 +33,10 @@ function MyIssuesPage() {
         setIssues(data);
       } catch (apiError) {
         console.error("Failed to fetch my issues:", apiError);
-        const errorMessage =
-          apiError.response &&
-          apiError.response.data &&
-          apiError.response.data.message
-            ? apiError.response.data.message
-            : "Could not load your issues.";
+        const errorMessage = apiError.message || "Could not load your issues.";
+        // Set error for display
         setError(errorMessage);
-        // Show a snackbar notification on error
+        // Also show notification for immediate feedback
         showNotification(errorMessage, "error");
       } finally {
         setLoading(false);
@@ -49,7 +44,10 @@ function MyIssuesPage() {
     };
 
     fetchIssues();
-  }, []); // The empty array [] means this runs only once
+    // We disable the exhaustive-deps rule here because showNotification
+    // is stable and we only want this to run once on load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -59,8 +57,7 @@ function MyIssuesPage() {
     );
   }
 
-  // Show persistent error on the page
-  if (error && issues.length === 0) {
+  if (error) {
     return <Alert severity="error">{error}</Alert>;
   }
 
@@ -75,18 +72,6 @@ function MyIssuesPage() {
         <Box>
           {issues.map((issue) => (
             <Card key={issue.id} sx={{ mb: 2 }}>
-              {/* --- 3. ADD THIS BLOCK (Conditional Image) --- */}
-              {issue.imageUrl && (
-                <CardMedia
-                  component="img"
-                  height="300"
-                  image={`${BACKEND_URL}${issue.imageUrl}`}
-                  alt={issue.title}
-                  sx={{ objectFit: "cover" }}
-                />
-              )}
-              {/* --- END OF NEW BLOCK --- */}
-
               <CardContent>
                 <Box
                   sx={{
@@ -96,9 +81,17 @@ function MyIssuesPage() {
                     mb: 1,
                   }}
                 >
+                  {/* --- 3. THIS IS THE CHANGE --- */}
                   <Typography variant="h6" component="h2">
-                    {issue.title}
+                    <Link
+                      component={RouterLink}
+                      to={`/issue/${issue.id}`}
+                      sx={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      {issue.title}
+                    </Link>
                   </Typography>
+
                   <Chip
                     label={issue.status}
                     color={
@@ -108,7 +101,6 @@ function MyIssuesPage() {
                         ? "warning"
                         : "default"
                     }
-                    size="small"
                   />
                 </Box>
                 <Typography color="text.secondary" gutterBottom>
@@ -117,6 +109,25 @@ function MyIssuesPage() {
                 <Typography variant="body2" sx={{ mb: 2 }}>
                   {issue.description}
                 </Typography>
+
+                {/* 4. Conditionally render the image if it exists */}
+                {issue.imageUrl && (
+                  <CardMedia
+                    component="img"
+                    image={`${BACKEND_URL}${issue.imageUrl}`}
+                    alt={issue.title}
+                    sx={{
+                      height: 300,
+                      width: "100%",
+                      objectFit: "contain",
+                      mt: 2,
+                      mb: 2,
+                      borderRadius: 1,
+                      backgroundColor: "#f5f5f5",
+                    }}
+                  />
+                )}
+
                 <Typography color="text.secondary" variant="caption">
                   Reported on: {new Date(issue.createdAt).toLocaleDateString()}
                 </Typography>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link as RouterLink } from "react-router-dom"; // 1. Import RouterLink
 import {
   getAllIssues,
   updateIssueStatus,
@@ -15,7 +16,6 @@ import {
   Alert,
   Card,
   CardContent,
-  CardMedia, // 1. NEW IMPORT for images
   CardActions,
   Button,
   Select,
@@ -23,10 +23,8 @@ import {
   FormControl,
   InputLabel,
   Chip,
+  Link, // 2. Import MUI Link (we'll use it with the router)
 } from "@mui/material";
-
-// 2. DEFINE OUR BACKEND URL FOR MEDIA
-const BACKEND_URL = "http://localhost:8080";
 
 function AdminDashboardPage() {
   const [issues, setIssues] = useState([]);
@@ -34,7 +32,6 @@ function AdminDashboardPage() {
   const [error, setError] = useState(null);
   const { showNotification } = useNotification();
 
-  // ... (fetchIssues, handleStatusChange, and handleDelete functions are all the same)
   // Function to fetch all issues
   const fetchIssues = async () => {
     try {
@@ -55,6 +52,11 @@ function AdminDashboardPage() {
       setLoading(false);
     }
   };
+
+  // Fetch issues when the component mounts
+  useEffect(() => {
+    fetchIssues();
+  }, []);
 
   // Handler for changing an issue's status
   const handleStatusChange = async (id, newStatus) => {
@@ -83,6 +85,7 @@ function AdminDashboardPage() {
     if (!window.confirm("Are you sure you want to delete this issue?")) {
       return;
     }
+
     try {
       await deleteIssue(id);
       setIssues((prevIssues) => prevIssues.filter((issue) => issue.id !== id));
@@ -99,7 +102,8 @@ function AdminDashboardPage() {
     }
   };
 
-  // --- (Render Logic is the same) ---
+  // --- Render Logic ---
+
   if (loading) {
     return (
       <Box
@@ -123,6 +127,9 @@ function AdminDashboardPage() {
     );
   }
 
+  // We need this to build the full image URL
+  const BACKEND_URL = "http://localhost:8080";
+
   return (
     <Container maxWidth="lg">
       <Typography variant="h4" component="h1" gutterBottom>
@@ -142,18 +149,6 @@ function AdminDashboardPage() {
         <Box>
           {issues.map((issue) => (
             <Card key={issue.id} sx={{ mb: 2, backgroundColor: "#f9f9f9" }}>
-              {/* --- 3. ADD THIS BLOCK (Conditional Image) --- */}
-              {issue.imageUrl && (
-                <CardMedia
-                  component="img"
-                  height="300" // Set a fixed height for consistency
-                  image={`${BACKEND_URL}${issue.imageUrl}`}
-                  alt={issue.title}
-                  sx={{ objectFit: "cover" }} // Ensures the image covers the area
-                />
-              )}
-              {/* --- END OF NEW BLOCK --- */}
-
               <CardContent>
                 <Box
                   sx={{
@@ -163,9 +158,18 @@ function AdminDashboardPage() {
                     mb: 1,
                   }}
                 >
+                  {/* --- 3. THIS IS THE CHANGE --- */}
+                  {/* Make the title a clickable link to the detail page */}
                   <Typography variant="h6" component="h2">
-                    {issue.title}
+                    <Link
+                      component={RouterLink}
+                      to={`/issue/${issue.id}`}
+                      sx={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      {issue.title}
+                    </Link>
                   </Typography>
+
                   <Chip
                     label={issue.status}
                     color={
@@ -185,6 +189,22 @@ function AdminDashboardPage() {
                 <Typography variant="body2" sx={{ mb: 2 }}>
                   {issue.description}
                 </Typography>
+
+                {/* 4. Conditionally render the image if it exists */}
+                {issue.imageUrl && (
+                  <Box sx={{ mb: 2, maxHeight: 300, overflow: "hidden" }}>
+                    <img
+                      src={`${BACKEND_URL}${issue.imageUrl}`}
+                      alt={issue.title}
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </Box>
+                )}
+
                 <Typography color="text.secondary" variant="caption">
                   Reported on: {new Date(issue.createdAt).toLocaleString()}
                 </Typography>

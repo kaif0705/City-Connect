@@ -4,9 +4,10 @@ import com.cityconnect.backend.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod; // <-- 1. NEW IMPORT
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,6 +24,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Enables @PreAuthorize on our controllers
 public class SecurityConfig {
 
     @Autowired
@@ -49,26 +51,25 @@ public class SecurityConfig {
 
                 // 4. Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                                // --- 3. START OF UPDATED RULES ---
-                                // Public endpoints (everyone can access)
-                                .requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/hello-world").permitAll()
-                                .requestMatchers("/api/v1/data/**").permitAll()
-                                .requestMatchers("/h2-console/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/media/**").permitAll() // <-- NEW: Allows everyone to VIEW images
+                        // Public endpoints (everyone can access)
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/hello-world").permitAll()
+                        .requestMatchers("/api/v1/data/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/media/**").permitAll() // Allows everyone to VIEW images
 
-                                // Citizen-only endpoints
-                                .requestMatchers("/api/v1/issues/**").hasRole("CITIZEN")
+                        // --- THIS IS THE FIX/UPDATE for Step 13 ---
+                        // Citizen & Admin endpoints (for creating, viewing self, viewing details)
+                        .requestMatchers("/api/v1/issues/**").hasAnyRole("CITIZEN", "ADMIN")
 
-                                // User (Citizen or Admin) endpoints
-                                .requestMatchers("/api/v1/files/upload").hasAnyRole("CITIZEN", "ADMIN") // <-- NEW: Secures file uploads
+                        // User (Citizen or Admin) endpoints
+                        .requestMatchers("/api/v1/files/upload").hasAnyRole("CITIZEN", "ADMIN") // Secures file uploads
 
-                                // Admin-only endpoints
-                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        // Admin-only endpoints
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                                // All other requests must be authenticated
-                                .anyRequest().authenticated()
-                        // --- 4. END OF UPDATED RULES ---
+                        // All other requests must be authenticated
+                        .anyRequest().authenticated()
                 );
 
         // 5. Add our custom JWT filter

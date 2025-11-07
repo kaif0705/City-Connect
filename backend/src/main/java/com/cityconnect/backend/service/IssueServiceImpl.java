@@ -104,6 +104,17 @@ public class IssueServiceImpl implements IssueService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public IssueResponse getIssueById(Long id) {
+        // 1. Find the issue by its ID or throw our 404 exception
+        Issue issue = issueRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + id));
+
+        // 2. Map the entity to our response DTO and return it
+        return mapToResponse(issue);
+    }
+
 
     // --- Private Helper Methods for Mapping ---
 

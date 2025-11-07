@@ -1,5 +1,4 @@
-// 1. Import the central 'api' instance we just created.
-import api from './api';
+import api from "./api"; // Import our central Axios instance
 
 /**
  * --- Slice 1: Create an Issue ---
@@ -9,12 +8,15 @@ import api from './api';
  */
 export const createIssue = async (issueData) => {
   try {
-    // We send the 'issueData' as the JSON body of the request.
-    const response = await api.post('/issues', issueData);
+    const response = await api.post("/issues", issueData);
     return response.data;
   } catch (error) {
-    // Pass the error to the component to handle
-    throw error.response.data || error;
+    console.error("Failed to create issue:", error);
+    const errorMessage =
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : "Could not create issue. Please try again.";
+    throw new Error(errorMessage);
   }
 };
 
@@ -25,10 +27,15 @@ export const createIssue = async (issueData) => {
  */
 export const getAllIssues = async () => {
   try {
-    const response = await api.get('/admin/issues');
+    const response = await api.get("/admin/issues");
     return response.data;
   } catch (error) {
-    throw error.response.data || error;
+    console.error("Failed to fetch all issues:", error);
+    const errorMessage =
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : "Could not load issues. Please try again.";
+    throw new Error(errorMessage);
   }
 };
 
@@ -41,11 +48,17 @@ export const getAllIssues = async () => {
  */
 export const updateIssueStatus = async (id, newStatus) => {
   try {
-    // Our backend expects a JSON body like: { "status": "IN_PROGRESS" }
-    const response = await api.put(`/admin/issues/${id}/status`, { status: newStatus });
+    const response = await api.put(`/admin/issues/${id}/status`, {
+      status: newStatus,
+    });
     return response.data;
   } catch (error) {
-    throw error.response.data || error;
+    console.error("Failed to update status:", error);
+    const errorMessage =
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : "Could not update status. Please try again.";
+    throw new Error(errorMessage);
   }
 };
 
@@ -57,21 +70,52 @@ export const updateIssueStatus = async (id, newStatus) => {
  */
 export const deleteIssue = async (id) => {
   try {
-    // A DELETE request does not need a body.
     await api.delete(`/admin/issues/${id}`);
-    // A 204 No Content response has no data, so we return nothing.
   } catch (error) {
-    throw error.response.data || error;
+    console.error("Failed to delete issue:", error);
+    const errorMessage =
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : "Could not delete issue. Please try again.";
+    throw new Error(errorMessage);
   }
 };
 
 /**
- *  Get User Issues (for Citizen) ---
+ * --- Slice 5: Get My Issues (for Citizen) ---
  * Calls the GET /api/v1/issues/my endpoint.
  * @returns {Promise<Array>} - An array of the user's own issue objects.
  */
 export const getMyIssues = async () => {
-  // The auth token is automatically added by the interceptor in api.js
-  const response = await api.get('/issues/my');
-  return response.data;
+  try {
+    const response = await api.get("/issues/my");
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch user's issues:", error);
+    const errorMessage =
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : "Could not load your issues. Please try again.";
+    throw new Error(errorMessage);
+  }
+};
+
+/**
+ * --- Slice 6, Phase 3: Get Single Issue Details ---
+ * Calls the GET /api/v1/issues/{id} endpoint.
+ * @param {number} id - The ID of the issue to fetch.
+ * @returns {Promise<object>} - The full issue object.
+ */
+export const getIssueById = async (id) => {
+  try {
+    const response = await api.get(`/issues/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch issue by ID:", error);
+    const errorMessage =
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : "Could not load this issue. Please try again.";
+    throw new Error(errorMessage);
+  }
 };

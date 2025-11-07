@@ -83,4 +83,10 @@ public class IssueController {
         List<IssueResponse> issues = issueService.getIssuesForCurrentUser();
         return new ResponseEntity<>(issues, HttpStatus.OK);
     }
+
+    @GetMapping("/issues/{id}")
+    public ResponseEntity<IssueResponse> getIssueById(@PathVariable Long id) {
+        IssueResponse issue = issueService.getIssueById(id);
+        return ResponseEntity.ok(issue);
+    }
 }

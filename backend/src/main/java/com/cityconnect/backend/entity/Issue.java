@@ -6,6 +6,7 @@ import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data // Lombok: Adds getters, setters, toString, etc.
 @Entity
@@ -43,4 +44,8 @@ public class Issue {
     @JoinColumn(name = "user_id", nullable = false) // Defines the foreign key column
     @ToString.Exclude // 2. Add this to prevent infinite loops in logging
     private User user;
+
+    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude // Prevents infinite loops in logging
+    private List<Comment> comments;
 }
