@@ -1,4 +1,4 @@
-package com.cityconnect.backend.contoller;
+package com.cityconnect.backend.controller;
 
 import com.cityconnect.backend.dto.IssueRequest;
 import com.cityconnect.backend.dto.IssueResponse;

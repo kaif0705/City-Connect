@@ -18,6 +18,7 @@ public class IssueResponse {
     private Double longitude;
     private Instant createdAt;
     private String imageUrl;
+    private String submittedByUsername; // To show who created the issue
 
     // We can add more fields later, like:
     // private String submittedByUsername;

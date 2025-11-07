@@ -3,10 +3,12 @@ package com.cityconnect.backend.service;
 import com.cityconnect.backend.dto.IssueRequest;
 import com.cityconnect.backend.dto.IssueResponse;
 import com.cityconnect.backend.entity.Issue;
+import com.cityconnect.backend.entity.User;
 import com.cityconnect.backend.exception.ResourceNotFoundException;
 import com.cityconnect.backend.repository.IssueRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,17 @@ public class IssueServiceImpl implements IssueService {
     @Override
     @Transactional
     public IssueResponse createIssue(IssueRequest issueRequest) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        //Map the DTO to an Entity
         Issue newIssue = mapToEntity(issueRequest);
+
+        //LINK THE USER TO THE ISSUE ---
+        newIssue.setUser(user);
+
+        //Save the new entity
         Issue savedIssue = issueRepository.save(newIssue);
+
         return mapToResponse(savedIssue);
     }
 
@@ -94,6 +105,10 @@ public class IssueServiceImpl implements IssueService {
         response.setLongitude(entity.getLongitude());
         response.setCreatedAt(entity.getCreatedAt());
         response.setImageUrl(entity.getImageUrl());
+        //ADD THE USERNAME TO THE RESPONSE ---
+        if (entity.getUser() != null) {
+            response.setSubmittedByUsername(entity.getUser().getUsername());
+        }
         return response;
     }
 }
