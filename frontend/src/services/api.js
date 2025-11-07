@@ -1,17 +1,29 @@
 import axios from 'axios';
 
-// 1. Define the Base URL for our Spring Boot backend.
-// We are using the port 8081 and the /api/v1 prefix we defined.
-const API_BASE_URL = 'http://localhost:8080/api/v1';
-
-// 2. Create the central axios instance.
+// 1. Create the central Axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  // We can add interceptors here later for auth (Slice 4)
+  baseURL: 'http://localhost:8080/api/v1', // Port is 8080
 });
 
-// 3. Export the instance so other services can use it.
+// 2. THIS IS THE "MAGIC": The Axios Interceptor
+// This code will run BEFORE every single request our app makes.
+api.interceptors.request.use(
+  (config) => {
+    // 3. Get the token from localStorage
+    const token = localStorage.getItem('jwtToken');
+
+    // 4. If the token exists, add it to the request headers
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // 5. Return the (modified) request config
+    return config;
+  },
+  (error) => {
+    // Handle request error
+    return Promise.reject(error);
+  }
+);
+
 export default api;

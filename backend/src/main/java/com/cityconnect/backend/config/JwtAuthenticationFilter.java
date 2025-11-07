@@ -36,44 +36,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        try {
-            // 1. Get the JWT from the request
-            String jwt = getJwtFromRequest(request);
 
-            // 2. Validate the token
-            if (StringUtils.hasText(jwt) && jwtUtil.validateToken(jwt)) {
-                // 3. Get username from token
-                String username = jwtUtil.getUsernameFromToken(jwt);
+        // --- START OF NEW LOGIC ---
+        // 1. Get the path of the request
+        String path = request.getRequestURI();
 
-                // 4. Load user details from the database
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        // 2. Check if the path is for auth (login/register). If so, SKIP THE FILTER.
+        if (path.startsWith("/api/v1/auth/")) {
+            filterChain.doFilter(request, response);
+            return; // Exit the filter early
+        }
+        // --- END OF NEW LOGIC ---
 
-                // 5. Create an authentication token
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        // Try to get the token from the request
+        String token = getTokenFromRequest(request);
 
-                // 6. Set the authentication in the Spring Security Context
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-        } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+        // If a token is found and is valid, authenticate the user
+        if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
+            String username = jwtUtil.getUsernameFromToken(token);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
+            );
+
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        // 7. Continue the filter chain
+        // Continue the filter chain
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Helper method to extract the "Bearer" token from the
-     * 'Authorization' header.
-     */
-    private String getJwtFromRequest(HttpServletRequest request) {
+    private String getTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;
     }
+
+    /**
+     * Helper method to extract the "Bearer" token from the
+     * 'Authorization' header.
+     */
 }
