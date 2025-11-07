@@ -4,85 +4,138 @@ import {
   updateIssueStatus,
   deleteIssue,
 } from "../services/issueService";
+import { useNotification } from "../context/NotificationContext"; // 1. Import notification hook
 
-// Import MUI components for a clean UI
+// Import MUI components
 import {
   Container,
   Typography,
   Box,
-  Paper,
   CircularProgress,
   Alert,
+  Card,
+  CardContent,
+  CardActions,
   Button,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
+  Chip,
 } from "@mui/material";
 
 function AdminDashboardPage() {
-  // State for issues, loading, and errors
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { showNotification } = useNotification(); // 2. Get the notification function
 
-  // useEffect to fetch data when the component mounts
-  useEffect(() => {
-    fetchIssues();
-  }, []); // The empty array means this runs once on load
-
+  // Function to fetch all issues
   const fetchIssues = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
+      setError(null);
       const data = await getAllIssues();
       setIssues(data);
-      setError(null);
     } catch (apiError) {
-      setError(apiError.message || "Failed to fetch issues.");
+      console.error("Failed to fetch issues:", apiError);
+      // Use the local error state for a persistent error on the page
+      const errorMessage =
+        apiError.response &&
+        apiError.response.data &&
+        apiError.response.data.message
+          ? apiError.response.data.message
+          : "Could not load issues. Please try again later.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Slice 3: Handle Status Update ---
+  // Fetch issues when the component mounts
+  useEffect(() => {
+    fetchIssues();
+  }, []); // The empty array [] means this runs only once
+
+  // Handler for changing an issue's status
   const handleStatusChange = async (id, newStatus) => {
     try {
+      // 1. Call the API
       const updatedIssue = await updateIssueStatus(id, newStatus);
-      // Update the 'issues' state locally to reflect the change
+
+      // 2. Update the local state to match
       setIssues((prevIssues) =>
-        prevIssues.map((issue) => (issue.id === id ? updatedIssue : issue))
+        prevIssues.map((issue) =>
+          issue.id === id ? { ...issue, status: updatedIssue.status } : issue
+        )
       );
+
+      // 3. Show success notification
+      showNotification("Issue status updated successfully!", "success");
     } catch (apiError) {
-      alert(`Error updating status: ${apiError.message}`);
+      console.error("Failed to update status:", apiError);
+      // 4. Show error notification
+      const errorMessage =
+        apiError.response &&
+        apiError.response.data &&
+        apiError.response.data.message
+          ? apiError.response.data.message
+          : "Failed to update status.";
+      showNotification(errorMessage, "error");
     }
   };
 
-  // --- Slice 3: Handle Delete ---
+  // Handler for deleting an issue
   const handleDelete = async (id) => {
-    // Add a confirmation dialog
+    // Optional: Confirm before deleting
     if (!window.confirm("Are you sure you want to delete this issue?")) {
       return;
     }
 
     try {
+      // 1. Call the API
       await deleteIssue(id);
-      // Update the 'issues' state locally by filtering out the deleted issue
+
+      // 2. Update local state by filtering out the deleted issue
       setIssues((prevIssues) => prevIssues.filter((issue) => issue.id !== id));
+
+      // 3. Show success notification
+      showNotification("Issue deleted successfully!", "success");
     } catch (apiError) {
-      alert(`Error deleting issue: ${apiError.message}`);
+      console.error("Failed to delete issue:", apiError);
+      // 4. Show error notification
+      const errorMessage =
+        apiError.response &&
+        apiError.response.data &&
+        apiError.response.data.message
+          ? apiError.response.data.message
+          : "Failed to delete issue.";
+      showNotification(errorMessage, "error");
     }
   };
 
-  // --- Render Logic ---
+  // --- 3. Render Logic ---
+
+  // 3a. Show loading spinner while fetching
   if (loading) {
     return (
-      <CircularProgress sx={{ display: "block", margin: "auto", mt: 4 }} />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "50vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
+  // 3b. Show persistent error if fetching failed
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert severity="error" sx={{ mt: 2 }}>
         {error}
       </Alert>
     );
@@ -90,53 +143,68 @@ function AdminDashboardPage() {
 
   return (
     <Container maxWidth="lg">
-      <Typography
-        variant="h4"
-        component="h1"
-        gutterBottom
-        sx={{ mt: 2, mb: 2 }}
-      >
+      <Typography variant="h4" component="h1" gutterBottom>
         Admin Dashboard
       </Typography>
 
+      {/* 3c. Show empty state message */}
       {issues.length === 0 ? (
-        <Typography>No issues submitted yet.</Typography>
+        <Typography
+          variant="h6"
+          color="text.secondary"
+          align="center"
+          sx={{ mt: 5 }}
+        >
+          No issues found.
+        </Typography>
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        // 3d. Render the list of issues
+        <Box>
           {issues.map((issue) => (
-            <Paper key={issue.id} elevation={3} sx={{ padding: 2 }}>
-              <Typography variant="h6">
-                {issue.title} (ID: {issue.id})
-              </Typography>
-              <Typography variant="body1" sx={{ mt: 1, mb: 1 }}>
-                {issue.description}
-              </Typography>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  alignItems: "center",
-                  mt: 2,
-                  flexWrap: "wrap",
-                }}
-              >
-                {/* Category */}
-                <Typography variant="body2">
-                  <strong>Category:</strong> {issue.category}
+            <Card key={issue.id} sx={{ mb: 2, backgroundColor: "#f9f9f9" }}>
+              <CardContent>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                  }}
+                >
+                  <Typography variant="h6" component="h2">
+                    {issue.title}
+                  </Typography>
+                  <Chip
+                    label={issue.status}
+                    color={
+                      issue.status === "RESOLVED"
+                        ? "success"
+                        : issue.status === "IN_PROGRESS"
+                        ? "warning"
+                        : "default"
+                    }
+                    size="small"
+                  />
+                </Box>
+                <Typography color="text.secondary" gutterBottom>
+                  Category: {issue.category} (Reported by:{" "}
+                  {issue.submittedByUsername})
                 </Typography>
-                {/* Reported Date */}
-                <Typography variant="body2">
-                  <strong>Reported:</strong>{" "}
-                  {new Date(issue.createdAt).toLocaleString()}
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  {issue.description}
                 </Typography>
-
-                {/* Status Dropdown (Slice 3) */}
-                <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>Status</InputLabel>
+                <Typography color="text.secondary" variant="caption">
+                  Reported on: {new Date(issue.createdAt).toLocaleString()}
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: "flex-end", pr: 2, pb: 2 }}>
+                {/* Status Update Dropdown */}
+                <FormControl size="small" sx={{ minWidth: 150, mr: 1 }}>
+                  <InputLabel>Change Status</InputLabel>
                   <Select
                     value={issue.status}
-                    label="Status"
+                    label="Change Status"
+                    // Call handler when a new value is selected
                     onChange={(e) =>
                       handleStatusChange(issue.id, e.target.value)
                     }
@@ -147,17 +215,17 @@ function AdminDashboardPage() {
                   </Select>
                 </FormControl>
 
-                {/* Delete Button (Slice 3) */}
+                {/* Delete Button */}
                 <Button
-                  variant="outlined"
-                  color="error"
                   size="small"
+                  color="error"
+                  variant="outlined"
                   onClick={() => handleDelete(issue.id)}
                 >
                   Delete
                 </Button>
-              </Box>
-            </Paper>
+              </CardActions>
+            </Card>
           ))}
         </Box>
       )}

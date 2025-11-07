@@ -2,54 +2,55 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { registerUser } from "../services/authService";
+import { useNotification } from "../context/NotificationContext"; // 1. Import the notification hook
 
-import { Button, TextField, Container, Typography, Box, Alert } from '@mui/material';
+// Import MUI components
+import {
+  Button,
+  TextField,
+  Container,
+  Typography,
+  Box,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 
 function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth(); // We'll auto-login the user after they register
   const navigate = useNavigate();
+  const { showNotification } = useNotification(); // 2. Get the notification function
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       // 1. Call the register API service
       const data = await registerUser({ username, email, password });
 
       // 2. On success, call login() to auto-login the new user
-      // Our backend sends back { token, username, role }
       login(data.token, { username: data.username, role: data.role });
 
-      // 3. Redirect to the homepage
+      // 3. Show success notification and redirect
+      showNotification("Registration successful! Welcome!", "success");
       navigate("/");
     } catch (apiError) {
       console.error("Registration failed:", apiError);
 
-      // --- THIS IS THE FIX ---
-      // Check if the error has a response and a data message from our backend
-      if (
+      // 4. Use the notification hook to show the error
+      const errorMessage =
         apiError.response &&
         apiError.response.data &&
         apiError.response.data.message
-      ) {
-        // This is a clean error from our Spring Boot GlobalExceptionHandler
-        // (e.g., "Username is already taken: ...")
-        setError(apiError.response.data.message);
-      } else {
-        // This is a generic network error (e.g., backend is not running)
-        // or the bug we saw earlier.
-        setError(
-          "Registration failed. Please check your network and try again."
-        );
-      }
+          ? apiError.response.data.message
+          : "Registration failed. Please check your network and try again.";
+
+      showNotification(errorMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,6 @@ function RegisterPage() {
 
   return (
     <Container component="main" maxWidth="xs">
-      {" "}
       <Box
         sx={{
           marginTop: 8,
@@ -70,18 +70,12 @@ function RegisterPage() {
           boxShadow: "0 3px 10px rgb(0 0 0 / 0.1)",
         }}
       >
-        {" "}
         <Typography component="h1" variant="h5">
-          {" "}
-          Sign Up{" "}
-        </Typography>{" "}
+          Sign Up
+        </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          {/* Show the error in an Alert component */}
-          {error && (
-            <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+          {/* We no longer need the <Alert> component here, 
+              as the Snackbar will handle all errors. */}
 
           <TextField
             margin="normal"
@@ -94,6 +88,7 @@ function RegisterPage() {
             autoFocus
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            disabled={loading}
           />
           <TextField
             margin="normal"
@@ -105,6 +100,7 @@ function RegisterPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
           />
           <TextField
             margin="normal"
@@ -117,6 +113,7 @@ function RegisterPage() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
           />
           <Button
             type="submit"
@@ -125,7 +122,7 @@ function RegisterPage() {
             disabled={loading}
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading ? "Signing Up..." : "Sign Up"}
+            {loading ? <CircularProgress size={24} /> : "Sign Up"}
           </Button>
           <Box textAlign="center">
             <Link to="/login" style={{ textDecoration: "none" }}>
