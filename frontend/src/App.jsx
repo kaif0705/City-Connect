@@ -13,7 +13,8 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import MyIssuesPage from "./pages/MyIssuesPage";
-import IssueDetailPage from "./pages/IssueDetailPage"; // <-- 1. IMPORT THE NEW DETAIL PAGE
+import IssueDetailPage from "./pages/IssueDetailPage";
+import ProfilePage from "./pages/ProfilePage"; // <-- 1. IMPORT THE NEW PAGE
 
 // --- Import our GUARDS ---
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -58,8 +59,13 @@ function App() {
               <Button component={RouterLink} to="/" color="inherit">
                 Report an Issue
               </Button>
-              <Button component={RouterLink} to="/my-issues" color="inher t">
+              <Button component={RouterLink} to="/my-issues" color="inherit">
                 My Issues
+              </Button>
+
+              {/* --- 2. ADD THE "PROFILE" LINK HERE --- */}
+              <Button component={RouterLink} to="/profile" color="inherit">
+                Profile
               </Button>
 
               {user?.role === "ROLE_ADMIN" && (
@@ -110,14 +116,21 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* --- 3. ADD THE NEW DYNAMIC ROUTE (for issue details) --- */}
-          {/* This path /issue/:id will match /issue/1, /issue/2, etc. */}
           <Route
             path="/issue/:id"
             element={
               <ProtectedRoute>
                 <IssueDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* --- 3. ADD THE NEW "/profile" ROUTE --- */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />
