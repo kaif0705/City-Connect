@@ -49,7 +49,7 @@ function App() {
             to="/"
             sx={{ flexGrow: 1, color: "inherit", textDecoration: "none" }}
           >
-            CityConnect
+            MIT-Connect
           </Typography>
 
           {isAuthenticated ? (
@@ -58,7 +58,7 @@ function App() {
               <Button component={RouterLink} to="/" color="inherit">
                 Report an Issue
               </Button>
-              <Button component={RouterLink} to="/my-issues" color="inherit">
+              <Button component={RouterLink} to="/my-issues" color="inher t">
                 My Issues
               </Button>
 

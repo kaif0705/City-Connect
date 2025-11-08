@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link as RouterLink } from "react-router-dom"; // 1. Import RouterLink
+import { Link as RouterLink } from "react-router-dom";
 import {
   getAllIssues,
   updateIssueStatus,
@@ -23,8 +23,12 @@ import {
   FormControl,
   InputLabel,
   Chip,
-  Link, // 2. Import MUI Link (we'll use it with the router)
+  Link,
+  CardMedia,
 } from "@mui/material";
+
+// We need this to build the full image URL
+const BACKEND_URL = "http://localhost:8080";
 
 function AdminDashboardPage() {
   const [issues, setIssues] = useState([]);
@@ -56,7 +60,7 @@ function AdminDashboardPage() {
   // Fetch issues when the component mounts
   useEffect(() => {
     fetchIssues();
-  }, []);
+  }, []); // The empty array [] means this runs only once
 
   // Handler for changing an issue's status
   const handleStatusChange = async (id, newStatus) => {
@@ -127,12 +131,16 @@ function AdminDashboardPage() {
     );
   }
 
-  // We need this to build the full image URL
-  const BACKEND_URL = "http://localhost:8080";
-
   return (
     <Container maxWidth="lg">
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        sx={{ color: "white" }}
+      >
+        {" "}
+        {/* MAKE TITLE WHITE */}
         Admin Dashboard
       </Typography>
 
@@ -141,14 +149,29 @@ function AdminDashboardPage() {
           variant="h6"
           color="text.secondary"
           align="center"
-          sx={{ mt: 5 }}
+          sx={{ mt: 5, color: "white" }}
         >
+          {" "}
+          {/* MAKE EMPTY TEXT WHITE */}
           No issues found.
         </Typography>
       ) : (
         <Box>
           {issues.map((issue) => (
-            <Card key={issue.id} sx={{ mb: 2, backgroundColor: "#f9f9f9" }}>
+            <Card
+              key={issue.id}
+              sx={{
+                mb: 2,
+
+                // --- THIS IS THE FIX ---
+                // Apply the same translucent styles
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 4px 30px rgba(0, 0, 0, 0.5)",
+                borderRadius: "12px",
+                // --- END OF FIX ---
+              }}
+            >
               <CardContent>
                 <Box
                   sx={{
@@ -158,8 +181,6 @@ function AdminDashboardPage() {
                     mb: 1,
                   }}
                 >
-                  {/* --- 3. THIS IS THE CHANGE --- */}
-                  {/* Make the title a clickable link to the detail page */}
                   <Typography variant="h6" component="h2">
                     <Link
                       component={RouterLink}
@@ -190,16 +211,24 @@ function AdminDashboardPage() {
                   {issue.description}
                 </Typography>
 
-                {/* 4. Conditionally render the image if it exists */}
                 {issue.imageUrl && (
-                  <Box sx={{ mb: 2, maxHeight: 300, overflow: "hidden" }}>
-                    <img
-                      src={`${BACKEND_URL}${issue.imageUrl}`}
+                  <Box
+                    sx={{
+                      mb: 2,
+                      maxHeight: 300,
+                      overflow: "hidden",
+                      borderRadius: 1,
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      image={`${BACKEND_URL}${issue.imageUrl}`}
                       alt={issue.title}
-                      style={{
+                      sx={{
                         width: "100%",
                         height: "auto",
-                        objectFit: "cover",
+                        objectFit: "contain",
+                        backgroundColor: "#f5f5f5", // Solid background for image
                       }}
                     />
                   </Box>
@@ -210,7 +239,14 @@ function AdminDashboardPage() {
                 </Typography>
               </CardContent>
               <CardActions sx={{ justifyContent: "flex-end", pr: 2, pb: 2 }}>
-                <FormControl size="small" sx={{ minWidth: 150, mr: 1 }}>
+                <FormControl
+                  size="small"
+                  sx={{
+                    minWidth: 150,
+                    mr: 1,
+                    backgroundColor: "rgba(255, 255, 255, 0.3)",
+                  }}
+                >
                   <InputLabel>Change Status</InputLabel>
                   <Select
                     value={issue.status}
@@ -230,6 +266,15 @@ function AdminDashboardPage() {
                   color="error"
                   variant="outlined"
                   onClick={() => handleDelete(issue.id)}
+                  sx={{
+                    // Style the delete button to look better on the card
+                    borderColor: "rgba(211, 47, 47, 0.5)",
+                    color: "#d32f2f",
+                    "&:hover": {
+                      backgroundColor: "rgba(211, 47, 47, 0.04)",
+                      borderColor: "#d32f2f",
+                    },
+                  }}
                 >
                   Delete
                 </Button>

@@ -71,7 +71,16 @@ function MyIssuesPage() {
       ) : (
         <Box>
           {issues.map((issue) => (
-            <Card key={issue.id} sx={{ mb: 2 }}>
+            <Card
+              key={issue.id}
+              sx={{
+                mb: 2,
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 4px 30px rgba(0, 0, 0, 0.5)",
+                borderRadius: "12px",
+              }}
+            >
               <CardContent>
                 <Box
                   sx={{

@@ -60,14 +60,13 @@ function RegisterPage() {
     <Container component="main" maxWidth="xs">
       <Box
         sx={{
+          padding: 4, 
           marginTop: 8,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          backgroundColor: "white",
-          padding: 4,
-          borderRadius: 2,
-          boxShadow: "0 3px 10px rgb(0 0 0 / 0.1)",
+          // --- ADD THESE LINES FOR TRANSLUCENCY ---
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // White with 70% opacity
+          backdropFilter: 'blur(5px)', // Blurs the background behind the card
+          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)', // Optional: nicer shadow
+          borderRadius: '12px'
         }}
       >
         <Typography component="h1" variant="h5">
